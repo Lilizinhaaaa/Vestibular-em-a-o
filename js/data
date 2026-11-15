@@ -1,0 +1,64 @@
+// DADOS OFICIAIS DA GINCANA — fonte: Kit de Aplicação Vestibular em Ação 2027.
+// Não altere valores, critérios ou tempos sem autorização da equipe/orientador.
+// timeSeconds: null = o Kit não define tempo oficial para este desafio.
+
+export const MAX_TEAMS = 10; // folha de pontuação do Kit prevê 10 equipes
+
+export const CHALLENGES = [
+  {
+    id: "d1", number: 1, title: "Quiz Vestibular em Ação", maxPoints: 100, timeSeconds: null,
+    criteria: [{ id: "q", label: "5 questões × 20 pontos", max: 100 }],
+    standingsLabel: "Classificação parcial 1",
+  },
+  {
+    id: "d2", number: 2, title: "Cadê o tempo?", maxPoints: 100, timeSeconds: 8 * 60,
+    criteria: [
+      { id: "org", label: "Organização", max: 30 },
+      { id: "via", label: "Viabilidade", max: 30 },
+      { id: "coe", label: "Coerência", max: 20 },
+      { id: "jus", label: "Justificativa", max: 20 },
+    ],
+    standingsLabel: null,
+  },
+  {
+    id: "d3", number: 3, title: "Monte o cronograma", maxPoints: 100, timeSeconds: 10 * 60,
+    criteria: [
+      { id: "dis", label: "Distribuição das atividades", max: 30 },
+      { id: "equ", label: "Equilíbrio da rotina", max: 25 },
+      { id: "rev", label: "Revisão", max: 20 },
+      { id: "exe", label: "Exercícios/simulados", max: 15 },
+      { id: "via", label: "Viabilidade", max: 10 },
+    ],
+    standingsLabel: "Classificação parcial 2",
+  },
+  {
+    id: "d4", number: 4, title: "Tecnologia a favor do estudo", maxPoints: 100, timeSeconds: 8 * 60,
+    criteria: [
+      { id: "ade", label: "Adequação do recurso", max: 40 },
+      { id: "exp", label: "Explicação do uso", max: 30 },
+      { id: "via", label: "Viabilidade", max: 20 },
+      { id: "cri", label: "Criatividade", max: 10 },
+    ],
+    standingsLabel: null,
+  },
+  {
+    id: "d5", number: 5, title: "Missão Final", maxPoints: 200, timeSeconds: 12 * 60,
+    criteria: [
+      { id: "com", label: "Compreensão do problema", max: 30 },
+      { id: "org", label: "Organização", max: 40 },
+      { id: "est", label: "Estratégias de preparação", max: 40 },
+      { id: "aco", label: "Acompanhamento do desempenho", max: 25 },
+      { id: "tec", label: "Uso pertinente de tecnologia", max: 25 },
+      { id: "jus", label: "Justificativa e integração", max: 40 },
+    ],
+    standingsLabel: "Classificação final",
+  },
+];
+
+export const TIEBREAKER = {
+  title: "Desempate",
+  timeSeconds: 2 * 60,
+  question: "Você tem apenas 7 dias até uma prova importante e percebeu que não conseguirá revisar tudo. Como decidiria o que estudar e como organizaria esses dias?",
+};
+
+export const TOTAL_POINTS = CHALLENGES.reduce((sum, c) => sum + c.maxPoints, 0); // 600
