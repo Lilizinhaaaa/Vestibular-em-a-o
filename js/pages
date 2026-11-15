@@ -1,0 +1,383 @@
+import { h } from "../utils.js";
+import { emptyState } from "../components/empty-state.js";
+
+/** Página provisória, honesta: avisa que a área ainda não está pronta. */
+export function placeholderPage({ title, text }) {
+  return h("div", { class: "container" },
+    h("h1", { class: "page-head" }, title),
+    emptyState({
+      icon: "🚧",
+      title: "Esta área está em construção",
+      text,
+      actionLabel: "Voltar ao início",
+      actionHref: "#/",
+    })
+  );
+}
+
+import { h, prefersReducedMotion } from "../utils.js";
+
+const FEATURES = [
+  { emoji: "📚", title: "Guia do vestibulando", color: "blue", href: "#/guia", status: ["soon", "Em construção"],
+    text: "Conteúdos curtos sobre ingresso, preparação, carreira e tecnologia — sempre com fonte oficial." },
+  { emoji: "🎯", title: "Desafios e quizzes", color: "pink", href: "#/desafios", status: ["soon", "Em construção"],
+    text: "Teste o que você sabe, receba feedback na hora e tente de novo quando quiser." },
+  { emoji: "🗓️", title: "Planejador de estudos", color: "green", href: "#/planejador", status: ["soon", "Em construção"],
+    text: "Monte sua semana do seu jeito, com tarefas, revisões e descanso." },
+  { emoji: "🏆", title: "Modo gincana", color: "orange", href: "#/gincana", status: ["proto", "Protótipo"],
+    text: "Ferramenta da equipe organizadora para conduzir a gincana presencial." },
+];
+
+function burstSvg() {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 100 100");
+  svg.setAttribute("class", "hero__burst");
+  svg.setAttribute("aria-hidden", "true");
+  let pts = "";
+  for (let i = 0; i < 24; i++) {
+    const r = i % 2 === 0 ? 48 : 34;
+    const a = (Math.PI * 2 * i) / 24 - Math.PI / 2;
+    pts += `${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)} `;
+  }
+  const poly = document.createElementNS(ns, "polygon");
+  poly.setAttribute("points", pts.trim());
+  poly.setAttribute("fill", "#FFD45C");
+  poly.setAttribute("stroke", "#24212B");
+  poly.setAttribute("stroke-width", "2");
+  poly.setAttribute("stroke-linejoin", "round");
+  const circle = document.createElementNS(ns, "circle");
+  circle.setAttribute("cx", "50"); circle.setAttribute("cy", "50"); circle.setAttribute("r", "26");
+  circle.setAttribute("fill", "#F36C9B"); circle.setAttribute("stroke", "#24212B"); circle.setAttribute("stroke-width", "2");
+  svg.append(poly, circle);
+  return svg;
+}
+
+export function homePage() {
+  const explore = () => {
+    document.getElementById("funcionalidades")
+      ?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+  };
+
+  return h("div", { class: "container stack-lg" },
+    h("section", { class: "hero", "aria-labelledby": "hero-title" },
+      burstSvg(),
+      h("div", { class: "hero__content" },
+        h("span", { class: "badge hero__eyebrow" }, "★ Vestibular em Ação"),
+        h("h1", { id: "hero-title" }, "Seu futuro começa em ", h("span", {}, "movimento.")),
+        h("p", { class: "hero__lead" },
+          "Descubra caminhos para o Ensino Superior, organize sua preparação do seu jeito e acompanhe seus próximos passos."),
+        h("div", { class: "cluster" },
+          h("button", { class: "btn btn--primary btn--large", type: "button", onclick: explore }, "Explorar a plataforma →"),
+          h("a", { class: "btn btn--large", href: "#/gincana" }, "Modo gincana")
+        )
+      )
+    ),
+
+    h("section", { id: "funcionalidades", "aria-labelledby": "feat-title" },
+      h("h2", { id: "feat-title", class: "section-title" }, "O que você vai encontrar aqui"),
+      h("p", { class: "section-lead" }, "Cada área mostra se já está disponível ou ainda em construção."),
+      h("div", { class: "grid grid--cards" }, FEATURES.map((f) =>
+        h("a", { class: `card card--accent card--${f.color}`, href: f.href },
+          h("div", { class: "card__top" },
+            h("span", { class: "card__emoji", "aria-hidden": "true" }, f.emoji),
+            h("span", { class: `badge badge--${f.status[0]}` }, f.status[1])
+          ),
+          h("h3", { class: "card__title" }, f.title),
+          h("p", { class: "text-muted" }, f.text)
+        )
+      ))
+    ),
+
+    h("section", { "aria-labelledby": "paths-title" },
+      h("div", { class: "card card--accent card--yellow" },
+        h("div", { class: "card__top" },
+          h("h2", { id: "paths-title", class: "card__title" }, "Caminhos de ingresso no Ensino Superior"),
+          h("span", { class: "badge badge--soon" }, "Em breve")
+        ),
+        h("p", { class: "text-muted" },
+          "Vamos reunir ENEM, vestibulares, SISU, ProUni, FIES e outras possibilidades. " +
+          "Cada conteúdo será publicado com link da fonte oficial e data da última verificação — " +
+          "por isso ainda não há informações de datas ou regras nesta versão.")
+      )
+    )
+  );
+}
+
+// Modo Gincana — PROTÓTIPO: preparação da sessão (dados salvos só neste aparelho).
+import { h, todayISO, uid } from "../utils.js";
+import { loadData, saveData, removeData } from "../storage.js";
+import { CHALLENGES, MAX_TEAMS, TOTAL_POINTS } from "../data/gincana-data.js";
+import { validateTeamName, cleanName, TEAM_NAME_MAX } from "../logic/team-rules.js";
+import { confirmDialog } from "../components/modal.js";
+import { showToast } from "../components/toast.js";
+
+const DRAFT_KEY = "gincana:rascunho";
+
+function loadDraft() {
+  const saved = loadData(DRAFT_KEY, null);
+  const base = { name: "", date: todayISO(), location: "", notes: "", teams: [] };
+  if (!saved || typeof saved !== "object") return base;
+  return {
+    name: String(saved.name ?? ""),
+    date: String(saved.date || base.date),
+    location: String(saved.location ?? ""),
+    notes: String(saved.notes ?? ""),
+    teams: Array.isArray(saved.teams)
+      ? saved.teams.filter((t) => t && t.id && t.name).map((t) => ({ id: String(t.id), name: String(t.name) }))
+      : [],
+  };
+}
+
+function formatTime(seconds) {
+  if (seconds === null) return "Tempo não definido no Kit";
+  return `${seconds / 60} min sugeridos`;
+}
+
+export function gincanaPage() {
+  const state = loadDraft();
+  let editingId = null;
+
+  const persist = () => {
+    if (!saveData(DRAFT_KEY, state)) showToast("Não foi possível salvar neste navegador.", "error");
+  };
+
+  /* ---------- Campos da sessão ---------- */
+  const nameError = h("p", { class: "field__error", id: "f-name-err" });
+  const dateError = h("p", { class: "field__error", id: "f-date-err" });
+  const status = h("p", { class: "status-line", role: "status" });
+
+  const nameInput = h("input", {
+    class: "input", id: "f-name", type: "text", maxlength: "80", required: true,
+    value: state.name, autocomplete: "off", "aria-describedby": "f-name-err",
+    placeholder: "Ex.: Vestibular em Ação — Escola Estadual X",
+  });
+  const dateInput = h("input", {
+    class: "input", id: "f-date", type: "date", required: true, value: state.date, "aria-describedby": "f-date-err",
+  });
+  const locationInput = h("input", {
+    class: "input", id: "f-loc", type: "text", maxlength: "80", value: state.location, autocomplete: "off",
+    placeholder: "Ex.: Auditório",
+  });
+  const notesInput = h("textarea", {
+    class: "input", id: "f-notes", maxlength: "300", "aria-describedby": "f-notes-hint",
+  });
+  notesInput.value = state.notes;
+
+  function validateSession(showErrors) {
+    const nameOk = cleanName(nameInput.value).length >= 3;
+    const dateOk = Boolean(dateInput.value);
+    if (showErrors) {
+      nameError.textContent = nameOk ? "" : "Informe um nome para a sessão (mínimo 3 caracteres).";
+      nameInput.setAttribute("aria-invalid", String(!nameOk));
+      dateError.textContent = dateOk ? "" : "Informe a data da gincana.";
+      dateInput.setAttribute("aria-invalid", String(!dateOk));
+    }
+    return nameOk && dateOk;
+  }
+
+  function refreshStatus() {
+    const ok = validateSession(false);
+    const enoughTeams = state.teams.length >= 2;
+    if (ok && enoughTeams) status.textContent = "✅ Sessão pronta para a próxima etapa.";
+    else {
+      const missing = [];
+      if (!ok) missing.push("nome e data da sessão");
+      if (!enoughTeams) missing.push("pelo menos 2 equipes");
+      status.textContent = "📝 Falta preencher: " + missing.join(" e ") + ".";
+    }
+  }
+
+  const onFieldInput = () => {
+    state.name = nameInput.value;
+    state.date = dateInput.value;
+    state.location = locationInput.value;
+    state.notes = notesInput.value;
+    persist();
+    refreshStatus();
+  };
+  [nameInput, dateInput, locationInput, notesInput].forEach((el) => el.addEventListener("input", onFieldInput));
+  nameInput.addEventListener("blur", () => validateSession(true));
+  dateInput.addEventListener("blur", () => validateSession(true));
+
+  /* ---------- Equipes ---------- */
+  const teamError = h("p", { class: "field__error", id: "t-err", role: "alert" });
+  const teamInput = h("input", {
+    class: "input", id: "t-name", type: "text", maxlength: String(TEAM_NAME_MAX + 10), autocomplete: "off",
+    placeholder: "Ex.: Time V! Roxo", "aria-describedby": "t-hint t-err",
+  });
+  const teamCount = h("p", { class: "text-muted", "aria-live": "polite" });
+  const teamList = h("ul", { class: "team-list", "aria-label": "Equipes cadastradas" });
+
+  function addTeam() {
+    const error = validateTeamName(teamInput.value, state.teams);
+    teamError.textContent = error;
+    teamInput.setAttribute("aria-invalid", String(Boolean(error)));
+    if (error) { teamInput.focus(); return; }
+    state.teams.push({ id: uid(), name: cleanName(teamInput.value) });
+    teamInput.value = "";
+    persist();
+    renderTeams();
+    teamInput.focus();
+    showToast("Equipe adicionada.");
+  }
+
+  async function removeTeam(team) {
+    const ok = await confirmDialog({
+      title: "Remover equipe?",
+      message: `A equipe "${team.name}" será removida da sessão.`,
+      confirmText: "Remover", danger: true,
+    });
+    if (!ok) return;
+    state.teams = state.teams.filter((t) => t.id !== team.id);
+    persist();
+    renderTeams();
+    teamInput.focus();
+    showToast("Equipe removida.");
+  }
+
+  function renderTeams() {
+    teamCount.textContent = `${state.teams.length} de ${MAX_TEAMS} equipes`;
+    const items = state.teams.map((team, index) => {
+      if (editingId === team.id) return renderEditRow(team, index);
+      return h("li", { class: "team-item" },
+        h("span", { class: "team-item__num", "aria-hidden": "true" }, index + 1),
+        h("span", { class: "team-item__name" }, team.name),
+        h("span", { class: "team-item__actions" },
+          h("button", { class: "btn btn--small", type: "button", "aria-label": `Editar equipe ${team.name}`,
+            onclick: () => { editingId = team.id; renderTeams(); } }, "Editar"),
+          h("button", { class: "btn btn--small btn--danger", type: "button", "aria-label": `Remover equipe ${team.name}`,
+            onclick: () => removeTeam(team) }, "Remover")
+        )
+      );
+    });
+    if (items.length === 0) {
+      teamList.replaceChildren(h("li", { class: "text-muted" },
+        "Nenhuma equipe ainda. Adicione o nome coletivo de cada grupo — sem nomes de estudantes."));
+    } else teamList.replaceChildren(...items);
+    refreshStatus();
+  }
+
+  function renderEditRow(team, index) {
+    const err = h("p", { class: "field__error", role: "alert" });
+    const input = h("input", { class: "input", type: "text", value: team.name, maxlength: String(TEAM_NAME_MAX + 10),
+      "aria-label": `Novo nome da equipe ${index + 1}` });
+    const save = () => {
+      const error = validateTeamName(input.value, state.teams, team.id);
+      err.textContent = error;
+      input.setAttribute("aria-invalid", String(Boolean(error)));
+      if (error) { input.focus(); return; }
+      team.name = cleanName(input.value);
+      editingId = null;
+      persist(); renderTeams(); showToast("Nome atualizado.");
+    };
+    const cancel = () => { editingId = null; renderTeams(); };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); save(); }
+      if (e.key === "Escape") cancel();
+    });
+    queueMicrotask(() => input.focus());
+    return h("li", { class: "team-item" },
+      h("span", { class: "team-item__num", "aria-hidden": "true" }, index + 1),
+      h("div", { class: "team-item__edit" }, input, err),
+      h("span", { class: "team-item__actions" },
+        h("button", { class: "btn btn--small btn--primary", type: "button", onclick: save }, "Salvar"),
+        h("button", { class: "btn btn--small", type: "button", onclick: cancel }, "Cancelar")
+      )
+    );
+  }
+
+  teamInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addTeam(); } });
+
+  async function clearAll() {
+    const ok = await confirmDialog({
+      title: "Limpar sessão?",
+      message: "Todos os dados desta sessão (campos e equipes) serão apagados deste aparelho.",
+      confirmText: "Limpar tudo", danger: true,
+    });
+    if (!ok) return;
+    removeData(DRAFT_KEY);
+    state.name = ""; state.date = todayISO(); state.location = ""; state.notes = ""; state.teams = [];
+    nameInput.value = ""; dateInput.value = state.date; locationInput.value = ""; notesInput.value = "";
+    nameError.textContent = ""; dateError.textContent = "";
+    nameInput.removeAttribute("aria-invalid"); dateInput.removeAttribute("aria-invalid");
+    editingId = null;
+    renderTeams();
+    showToast("Sessão limpa.");
+  }
+
+  /* ---------- Montagem da página ---------- */
+  const view = h("div", { class: "container stack-lg" },
+    h("header", { class: "page-head" },
+      h("div", { class: "cluster" },
+        h("span", { class: "badge badge--proto" }, "Protótipo"),
+        h("span", { class: "text-muted" }, "Área da equipe organizadora")
+      ),
+      h("h1", {}, "Modo Gincana"),
+      h("p", { class: "section-lead", style: "margin-top:.75rem" },
+        "Prepare a sessão: defina os dados do encontro e cadastre as equipes por nome coletivo.")
+    ),
+
+    h("div", { class: "alert alert--info", role: "note" },
+      h("span", { class: "alert__icon", "aria-hidden": "true" }, "ℹ️"),
+      h("p", {}, "Esta versão ainda não tem login nem sincronização entre aparelhos. " +
+        "Os dados ficam salvos apenas neste navegador. Não escreva nomes de estudantes.")
+    ),
+
+    h("section", { class: "card", "aria-labelledby": "sec-sessao" },
+      h("h2", { id: "sec-sessao", class: "card__title" }, "1. Dados da sessão"),
+      h("div", { class: "form-grid", style: "margin-top:1rem" },
+        h("div", { class: "field span-2" }, h("label", { class: "field__label", for: "f-name" }, "Nome da sessão *"), nameInput, nameError),
+        h("div", { class: "field" }, h("label", { class: "field__label", for: "f-date" }, "Data *"), dateInput, dateError),
+        h("div", { class: "field" }, h("label", { class: "field__label", for: "f-loc" }, "Local (opcional)"), locationInput),
+        h("div", { class: "field span-2" },
+          h("label", { class: "field__label", for: "f-notes" }, "Observações internas (opcional)"), notesInput,
+          h("p", { class: "field__hint", id: "f-notes-hint" }, "Visível só para a organização. Até 300 caracteres."))
+      )
+    ),
+
+    h("section", { class: "card", "aria-labelledby": "sec-equipes" },
+      h("h2", { id: "sec-equipes", class: "card__title" }, "2. Equipes"),
+      h("div", { class: "team-add", style: "margin-top:1rem" },
+        h("div", { class: "field" },
+          h("label", { class: "field__label", for: "t-name" }, "Nome coletivo da equipe"),
+          teamInput,
+          h("p", { class: "field__hint", id: "t-hint" }, `De 2 a ${TEAM_NAME_MAX} caracteres. Até ${MAX_TEAMS} equipes.`),
+          teamError),
+        h("button", { class: "btn btn--primary", type: "button", onclick: addTeam }, "Adicionar equipe")
+      ),
+      teamCount,
+      teamList
+    ),
+
+    h("section", { class: "card", "aria-labelledby": "sec-desafios" },
+      h("h2", { id: "sec-desafios", class: "card__title" }, "3. Os cinco desafios oficiais"),
+      h("p", { class: "text-muted", style: "margin-bottom:1rem" }, "Conforme o Kit Gincana Vestibular em Ação 2027."),
+      h("ol", { class: "challenge-list", style: "list-style:none;padding:0" }, CHALLENGES.map((c) =>
+        h("li", { class: "challenge-item" },
+          h("span", { class: "challenge-item__num", "aria-hidden": "true" }, c.number),
+          h("div", {},
+            h("strong", {}, `Desafio ${c.number} — ${c.title}`),
+            h("div", { class: "challenge-item__meta" },
+              formatTime(c.timeSeconds) + (c.standingsLabel ? ` • Após este desafio: ${c.standingsLabel}` : ""))
+          ),
+          h("span", { class: "challenge-item__points" }, `${c.maxPoints} pts`)
+        )
+      )),
+      h("p", { class: "total-line" }, `Pontuação máxima: ${TOTAL_POINTS} pontos`)
+    ),
+
+    h("section", { class: "card", "aria-labelledby": "sec-status" },
+      h("h2", { id: "sec-status", class: "card__title" }, "Situação"),
+      status,
+      h("div", { class: "cluster", style: "margin-top:1rem" },
+        h("button", { class: "btn btn--large", type: "button", "aria-disabled": "true", disabled: true },
+          "Iniciar gincana (próxima entrega)"),
+        h("button", { class: "btn btn--danger", type: "button", onclick: clearAll }, "Limpar sessão")
+      )
+    )
+  );
+
+  renderTeams();
+  return view;
+}
