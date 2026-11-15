@@ -1,0 +1,139 @@
+import { h } from "../utils.js";
+
+let region = null;
+
+/** Mostra uma mensagem rápida no rodapé da tela. type: "success" | "error" */
+export function showToast(message, type = "success") {
+  if (!region) {
+    region = h("div", { class: "toast-region", role: "status", "aria-live": "polite" });
+    document.body.append(region);
+  }
+  const toast = h("div", { class: "toast" + (type === "error" ? " toast--error" : "") },
+    (type === "error" ? "⚠ " : "✓ ") + message);
+  region.append(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+import { h } from "../utils.js";
+
+/**
+ * Janela de confirmação acessível (usa o elemento nativo <dialog>).
+ * Uso: if (await confirmDialog({ title: "Remover?", message: "..." })) { ... }
+ */
+export function confirmDialog({ title, message, confirmText = "Confirmar", cancelText = "Cancelar", danger = false }) {
+  if (typeof HTMLDialogElement === "undefined" || !document.createElement("dialog").showModal) {
+    return Promise.resolve(window.confirm(`${title}\n\n${message}`)); // plano B para navegadores antigos
+  }
+  return new Promise((resolve) => {
+    const dialog = h("dialog", { class: "modal", "aria-labelledby": "modal-title" },
+      h("form", { method: "dialog" },
+        h("h2", { id: "modal-title" }, title),
+        h("p", { style: "margin-top: .75rem" }, message),
+        h("div", { class: "modal__actions" },
+          h("button", { class: "btn", value: "cancel", autofocus: true }, cancelText),
+          h("button", { class: "btn " + (danger ? "btn--danger" : "btn--primary"), value: "confirm" }, confirmText)
+        )
+      )
+    );
+    dialog.addEventListener("close", () => {
+      const confirmed = dialog.returnValue === "confirm";
+      dialog.remove();
+      resolve(confirmed);
+    });
+    document.body.append(dialog);
+    dialog.showModal();
+  });
+}
+
+import { h } from "../utils.js";
+import { getTheme, toggleTheme } from "../theme.js";
+
+const NAV_ITEMS = [
+  { path: "/", label: "Início" },
+  { path: "/guia", label: "Guia" },
+  { path: "/desafios", label: "Desafios" },
+  { path: "/planejador", label: "Planejador" },
+  { path: "/gincana", label: "Gincana" },
+];
+
+export function mountHeader(container) {
+  const nav = h("nav", { class: "main-nav", id: "main-nav", "aria-label": "Principal" },
+    h("ul", {}, NAV_ITEMS.map((item) =>
+      h("li", {}, h("a", { class: "nav-link", href: "#" + item.path, "data-path": item.path }, item.label))
+    ))
+  );
+
+  const menuButton = h("button", {
+    class: "btn btn--icon menu-toggle", type: "button",
+    "aria-expanded": "false", "aria-controls": "main-nav", "aria-label": "Abrir menu",
+    onclick: () => setMenu(!nav.classList.contains("is-open")),
+  }, h("span", { "aria-hidden": "true" }, "☰"));
+
+  const themeButton = h("button", { class: "btn btn--icon", type: "button", onclick: toggleTheme });
+  const themeIcon = h("span", { "aria-hidden": "true" });
+  themeButton.append(themeIcon);
+
+  function refreshThemeButton() {
+    const dark = getTheme() === "dark";
+    themeIcon.textContent = dark ? "☀️" : "🌙";
+    themeButton.setAttribute("aria-label", dark ? "Ativar modo claro" : "Ativar modo escuro");
+    themeButton.setAttribute("title", dark ? "Modo claro" : "Modo escuro");
+  }
+  refreshThemeButton();
+  document.addEventListener("themechange", refreshThemeButton);
+
+  function setMenu(open) {
+    nav.classList.toggle("is-open", open);
+    menuButton.setAttribute("aria-expanded", String(open));
+    menuButton.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+    menuButton.firstChild.textContent = open ? "✕" : "☰";
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && nav.classList.contains("is-open")) { setMenu(false); menuButton.focus(); }
+  });
+
+  container.append(
+    h("div", { class: "container site-header__inner" },
+      h("a", { class: "brand", href: "#/", "aria-label": "Vestibular em Ação — página inicial" },
+        h("img", { src: "assets/brand/icon-v.svg", alt: "", width: "44", height: "44" }),
+        h("span", { class: "brand__name" }, "Vestibular", h("span", {}, "em Ação"))
+      ),
+      nav,
+      h("div", { class: "header-actions" }, themeButton, menuButton)
+    )
+  );
+
+  return {
+    /** Marca o link da página atual e fecha o menu mobile. */
+    setActive(path) {
+      nav.querySelectorAll(".nav-link").forEach((a) => {
+        if (a.dataset.path === path) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
+      });
+      setMenu(false);
+    },
+  };
+}
+
+import { h } from "../utils.js";
+
+export function mountFooter(container) {
+  container.append(
+    h("div", { class: "container" },
+      h("p", {}, "V! Vestibular em Ação • Projeto interdisciplinar — SIMAC 2027"),
+      h("p", {}, "Versão de desenvolvimento (protótipo). Esta plataforma não usa rastreadores e não coleta dados pessoais.")
+    )
+  );
+}
+
+import { h } from "../utils.js";
+
+export function emptyState({ icon = "🚧", title, text, actionLabel, actionHref }) {
+  return h("div", { class: "empty-state" },
+    h("div", { class: "empty-state__icon", "aria-hidden": "true" }, icon),
+    h("h2", {}, title),
+    h("p", {}, text),
+    actionLabel ? h("a", { class: "btn btn--primary", href: actionHref }, actionLabel) : null
+  );
+}
