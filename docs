@@ -1,0 +1,16 @@
+# Testes manuais — v0.1
+
+| # | Teste | Esperado |
+|---|---|---|
+| 1 | Abrir Início em 360 px e 1280 px | Sem rolagem horizontal; hero legível |
+| 2 | Alternar tema e recarregar | Tema se mantém; textos legíveis |
+| 3 | Menu no celular: abrir, navegar, Esc | Abre, fecha ao navegar e com Esc |
+| 4 | Navegar só com Tab/Enter | Foco sempre visível; "Pular para o conteúdo" funciona |
+| 5 | Gincana: adicionar equipe vazia | Mensagem de erro |
+| 6 | Gincana: nome repetido ("foco" e "FOCO") | Mensagem de duplicidade |
+| 7 | Gincana: 11ª equipe | Mensagem de limite |
+| 8 | Gincana: editar (Enter salva, Esc cancela) | Funciona |
+| 9 | Gincana: remover | Pede confirmação |
+| 10 | Recarregar a página da gincana | Equipes e campos permanecem |
+| 11 | Limpar sessão | Pede confirmação e apaga tudo |
+| 12 | Ativar "reduzir movimento" no sistema | Sem animações |
