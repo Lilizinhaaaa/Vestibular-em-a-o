@@ -1,0 +1,37 @@
+// Regras de validação dos nomes de equipe. Sem HTML aqui: assim dá para testar isoladamente.
+import { MAX_TEAMS } from "../data/gincana-data.js";
+
+export const TEAM_NAME_MIN = 2;
+export const TEAM_NAME_MAX = 30;
+
+/** Remove espaços extras: "  Time   Foco " -> "Time Foco" */
+export function cleanName(name) {
+  return String(name ?? "").replace(/\s+/g, " ").trim();
+}
+
+/** Para comparar nomes ignorando maiúsculas e acentos. */
+export function nameKey(name) {
+  return cleanName(name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/**
+ * Valida um nome de equipe.
+ * @param {string} name      nome digitado
+ * @param {Array}  teams     equipes já cadastradas [{id, name}]
+ * @param {string} ignoreId  id da equipe que está sendo editada
+ * @returns {string} mensagem de erro, ou "" se estiver tudo certo
+ */
+export function validateTeamName(name, teams, ignoreId = null) {
+  const cleaned = cleanName(name);
+  if (!cleaned) return "Digite um nome para a equipe.";
+  if (cleaned.length < TEAM_NAME_MIN) return `Use pelo menos ${TEAM_NAME_MIN} caracteres.`;
+  if (cleaned.length > TEAM_NAME_MAX) return `Use no máximo ${TEAM_NAME_MAX} caracteres.`;
+  const key = nameKey(cleaned);
+  if (teams.some((t) => t.id !== ignoreId && nameKey(t.name) === key)) {
+    return "Já existe uma equipe com esse nome.";
+  }
+  if (ignoreId === null && teams.length >= MAX_TEAMS) {
+    return `Limite de ${MAX_TEAMS} equipes atingido.`;
+  }
+  return "";
+}
