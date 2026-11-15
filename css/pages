@@ -1,0 +1,45 @@
+/* Página inicial */
+.hero {
+  position: relative; overflow: hidden;
+  border: var(--border-width) solid var(--border); border-radius: var(--radius-lg);
+  background: radial-gradient(circle at 1px 1px, rgba(128, 82, 214, .22) 1.5px, transparent 1.6px) 0 0 / 14px 14px, var(--surface);
+  box-shadow: var(--shadow-pop); padding: var(--space-7) var(--space-5);
+}
+.hero__content { position: relative; z-index: 1; max-width: 40rem; }
+.hero__eyebrow { margin-bottom: var(--space-3); }
+.hero h1 span { color: var(--brand-text); }
+.hero__lead { font-size: 1.15rem; margin-block: var(--space-4) var(--space-5); color: var(--text-muted); }
+.hero__burst { position: absolute; right: -3.5rem; bottom: -3.5rem; width: 13rem; opacity: .9; animation: spin-slow 40s linear infinite; z-index: 0; }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@media (min-width: 52rem) {
+  .hero { padding: var(--space-8) var(--space-7); }
+  .hero__burst { width: 22rem; right: 2rem; top: 50%; bottom: auto; margin-top: -11rem; }
+}
+.section-title { margin-bottom: var(--space-2); }
+.section-lead { color: var(--text-muted); margin-bottom: var(--space-5); max-width: 40rem; }
+.card__top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-2); }
+.card__emoji { font-size: 1.75rem; }
+
+/* Modo Gincana — preparação da sessão */
+.page-head { margin-bottom: var(--space-5); }
+.page-head .cluster { margin-bottom: var(--space-3); }
+.form-grid { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+@media (min-width: 40rem) { .form-grid { grid-template-columns: 1fr 1fr; } .form-grid .span-2 { grid-column: span 2; } }
+
+.team-add { display: flex; gap: var(--space-3); align-items: flex-start; flex-wrap: wrap; }
+.team-add .field { flex: 1 1 14rem; }
+.team-add .btn { margin-top: 1.9rem; }
+.team-list { list-style: none; padding: 0; display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+.team-item { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) var(--space-4); border: var(--border-width) solid var(--border); border-radius: var(--radius-sm); background: var(--surface-soft); }
+.team-item__num { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--purple); color: var(--white); font-weight: 800; font-family: var(--font-heading); }
+.team-item__name { flex: 1 1 8rem; font-weight: 700; overflow-wrap: anywhere; }
+.team-item__edit { flex: 1 1 14rem; }
+.team-item__actions { display: flex; gap: var(--space-2); }
+.status-line { display: flex; gap: var(--space-2); align-items: center; font-weight: 700; }
+
+.challenge-list { list-style: none; padding: 0; display: grid; gap: var(--space-3); }
+.challenge-item { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border: var(--border-width) solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.challenge-item__num { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-sm); background: var(--yellow); color: var(--graphite); font-family: var(--font-heading); font-weight: 800; border: var(--border-width) solid var(--graphite); }
+.challenge-item__meta { color: var(--text-muted); font-size: .9rem; }
+.challenge-item__points { font-family: var(--font-heading); font-weight: 800; white-space: nowrap; }
+.total-line { text-align: right; font-weight: 800; font-family: var(--font-heading); margin-top: var(--space-3); }
