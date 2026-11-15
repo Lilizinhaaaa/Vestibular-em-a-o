@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="t">
+  <title id="t">V!</title>
+  <polygon points="50.0,2.0 61.1,15.8 78.2,11.2 79.1,28.8 95.7,35.2 86.0,50.0 95.7,64.8 79.1,71.2 78.2,88.8 61.1,84.2 50.0,98.0 38.9,84.2 21.8,88.8 20.9,71.2 4.3,64.8 14.0,50.0 4.3,35.2 20.9,28.8 21.8,11.2 38.9,15.8" fill="#FFD45C" stroke="#24212B" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="50" cy="50" r="33" fill="#8052D6" stroke="#24212B" stroke-width="3"/>
+  <polygon points="27,36 38,36 42.5,55 47,36 58,36 48,66 37,66" fill="#FFFFFF"/>
+  <rect x="63" y="36" width="9" height="19" rx="4.5" fill="#FFD45C"/>
+  <circle cx="67.5" cy="63" r="4.5" fill="#FFD45C"/>
+</svg>
