@@ -1,0 +1,38 @@
+/* Estilos básicos: texto, links, títulos, foco e acessibilidade. */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: background-color .25s ease, color .25s ease;
+}
+h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2rem, 6vw, 3.5rem); }
+h2 { font-size: clamp(1.5rem, 4vw, 2.1rem); }
+h3 { font-size: 1.2rem; }
+a { color: var(--brand-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 3px; }
+
+/* Foco SEMPRE visível (navegação por teclado) */
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+.skip-link {
+  position: absolute; left: var(--space-4); top: -4rem; z-index: 100;
+  background: var(--yellow); color: var(--graphite);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm);
+  font-weight: 700; border: var(--border-width) solid var(--graphite);
+}
+.skip-link:focus { top: var(--space-3); }
+.text-muted { color: var(--text-muted); }
+
+/* Respeita quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
